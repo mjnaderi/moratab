@@ -81,8 +81,6 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 	var watcher = new Watcher();
 	editor.watcher = watcher;
 
-	var diffMatchPatch = new diff_match_patch();
-
 	function SelectionMgr() {
 		var self = this;
 		var lastSelectionStart = 0, lastSelectionEnd = 0;
@@ -221,16 +219,28 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 		selectionMgr.saveSelectionState();
 	}
 
+    var diff_commonPrefix = function (e, t) {
+        if (!e || !t || e.charAt(0) != t.charAt(0))return 0;
+        for (var n = 0, r = Math.min(e.length, t.length), i = r, s = 0; n < i;)e.substring(s, i) == t.substring(s, i) ? s = n = i : r = i, i = Math.floor((r - n) / 2 + n);
+        return i
+    };
+
+    var diff_commonSuffix = function (e, t) {
+        if (!e || !t || e.charAt(e.length - 1) != t.charAt(t.length - 1))return 0;
+        for (var n = 0, r = Math.min(e.length, t.length), i = r, s = 0; n < i;)e.substring(e.length - i, e.length - s) == t.substring(t.length - i, t.length - s) ? s = n = i : r = i, i = Math.floor((r - n) / 2 + n);
+        return i
+    };
+
 	editor.adjustCursorPosition = adjustCursorPosition;
 
 	var textContent;
 
 	function setValue(value) {
-		var startOffset = diffMatchPatch.diff_commonPrefix(textContent, value);
+		var startOffset = diff_commonPrefix(textContent, value);
 		if(startOffset === textContent.length)
 			startOffset--;
 		var endOffset = Math.min(
-			diffMatchPatch.diff_commonSuffix(textContent, value),
+			diff_commonSuffix(textContent, value),
 			textContent.length - startOffset,
 			value.length - startOffset
 		);
@@ -808,11 +818,6 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 
 	// Modal state
 	var isModalShown = false;
-	$(document.body).on('show.bs.modal', '.modal', function() {
-		isModalShown = true;
-	}).on('hidden.bs.modal', '.modal', function() {
-		isModalShown = false;
-	});
 
 	// Configure Mousetrap
 	Mousetrap.stopCallback = function() {
@@ -835,15 +840,39 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 		// Custom insert link dialog
 		pagedownEditor.hooks.set("insertLinkDialog", function(callback) {
 			core.insertLinkCallback = callback;
-			$(".modal input[type=text]").val("");
-			$(".modal-insert-link").modal();
+			$(".modal-insert-link input[type=text]").val("");
+			$(".modal-insert-link").modal({
+				onShow: function() {
+					isModalShown = true;
+				},
+				onHidden: function() {
+					isModalShown = false;
+                    // Hide events on "insert link" and "insert image" dialogs
+                    if(core.insertLinkCallback !== undefined) {
+                        core.insertLinkCallback(null);
+                        core.insertLinkCallback = undefined;
+                    }
+				}
+			}).modal('show');
 			return true;
 		});
 		// Custom insert image dialog
 		pagedownEditor.hooks.set("insertImageDialog", function(callback) {
 			core.insertLinkCallback = callback;
-			$(".modal input[type=text]").val("");
-			$(".modal-insert-image").modal();
+			$(".modal-insert-image input[type=text]").val("");
+			$(".modal-insert-image").modal({
+				onShow: function() {
+					isModalShown = true;
+				},
+				onHidden: function() {
+					isModalShown = false;
+                    // Hide events on "insert link" and "insert image" dialogs
+                    if(core.insertLinkCallback !== undefined) {
+                        core.insertLinkCallback(null);
+                        core.insertLinkCallback = undefined;
+                    }
+				}
+			}).modal('show');
 			return true;
 		});
 
@@ -860,52 +889,33 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 		$(".wmd-button-row li").addClass("btn");
 
 		// Add customized buttons
-		$("#wmd-bold-button").append($('<span class="glyphicon glyphicon-bold">')).appendTo($('.wmd-buttons .btn-group1'));
-		$("#wmd-italic-button").append($('<span class="glyphicon glyphicon-italic">')).appendTo($('.wmd-buttons .btn-group1'));
+		$("#wmd-bold-button").append($('<i class="bold icon">')).appendTo($('.wmd-buttons .btn-group1'));
+		$("#wmd-italic-button").append($('<i class="italic icon">')).appendTo($('.wmd-buttons .btn-group1'));
 
-		$("#wmd-heading-button").append($('<span class="glyphicon glyphicon-header">')).appendTo($('.wmd-buttons .btn-group2'));
-		$("#wmd-quote-button").append($('<span class="glyphicon glyphicon-comment">')).appendTo($('.wmd-buttons .btn-group2'));
-		$("#wmd-code-button").append($('<span class="glyphicon glyphicon-flash">')).appendTo($('.wmd-buttons .btn-group2'));
+		$("#wmd-heading-button").append($('<i class="header icon">')).appendTo($('.wmd-buttons .btn-group2'));
+		$("#wmd-quote-button").append($('<i class="quote right icon">')).appendTo($('.wmd-buttons .btn-group2'));
+		$("#wmd-code-button").append($('<i class="code icon">')).appendTo($('.wmd-buttons .btn-group2'));
 
-		$("#wmd-ulist-button").append($('<span class="glyphicon glyphicon-align-justify">')).appendTo($('.wmd-buttons .btn-group3'));
-		$("#wmd-olist-button").append($('<span class="glyphicon glyphicon-list">')).appendTo($('.wmd-buttons .btn-group3'));
+		$("#wmd-ulist-button").append($('<i class="unordered list icon">')).appendTo($('.wmd-buttons .btn-group3'));
+		$("#wmd-olist-button").append($('<i class="ordered list icon">')).appendTo($('.wmd-buttons .btn-group3'));
 
-		$("#wmd-link-button").append($('<span class="glyphicon glyphicon-link">')).appendTo($('.wmd-buttons .btn-group4'));
-		$("#wmd-image-button").append($('<span class="glyphicon glyphicon-picture">')).appendTo($('.wmd-buttons .btn-group4'));
-		$("#wmd-hr-button").append($('<span class="glyphicon glyphicon-minus">')).appendTo($('.wmd-buttons .btn-group4'));
-		$("#wmd-help-button").append($('<span class="glyphicon glyphicon-book">')).appendTo($('.wmd-buttons .btn-group4'));
-		$("#wmd-pdf-button").append($('<span class="glyphicon glyphicon-print">')).appendTo($('.wmd-buttons .btn-group4'));
+		$("#wmd-link-button").append($('<i class="linkify icon">')).appendTo($('.wmd-buttons .btn-group4'));
+		$("#wmd-image-button").append($('<i class="file image outline icon">')).appendTo($('.wmd-buttons .btn-group4'));
+		$("#wmd-hr-button").append($('<i class="minus icon">')).appendTo($('.wmd-buttons .btn-group4'));
+		$("#wmd-help-button").append($('<i class="help circle icon">')).appendTo($('.wmd-buttons .btn-group4'));
+		//$("#wmd-pdf-button").append($('<i class="file pdf outline icon">')).appendTo($('.wmd-buttons .btn-group4'));
 
 		// $("#wmd-undo-button").append($('<span class="glyphicon glyphicon-arrow-right">')).appendTo($('.wmd-buttons .btn-group5'));
 		// $("#wmd-redo-button").append($('<span class="glyphicon glyphicon-arrow-left">')).appendTo($('.wmd-buttons .btn-group5'));
 
-		$("#wmd-revert-button").append($('<span class="glyphicon glyphicon-floppy-open">')).appendTo($('.wmd-buttons .btn-group6'));
+		$("#wmd-revert-button").append($('<i class="download icon">')).appendTo($('.wmd-buttons .btn-group6'));
 
 
 		if(!localStorage.moratab) $("#wmd-revert-button").hide();
-		// Other initialization that are not prioritary
-		$(document.body).on('shown.bs.modal', '.modal', function() {
-			var $elt = $(this);
-			setTimeout(function() {
-				// When modal opens focus on the first button
-				$elt.find('.btn:first').focus();
-				// Or on the first link if any
-				$elt.find('button:first').focus();
-				// Or on the first input if any
-				$elt.find("input:enabled:visible:first").focus();
-			}, 50);
-		}).on('hidden.bs.modal', '.modal', function() {
-			// Focus on the editor when modal is gone
-			editor.focus();
-		}).on('keyup', '.modal', function(e) {
-			// Handle enter key in modals
-			if(e.which == 13 && !$(e.target).is("textarea")) {
-				$(this).find(".modal-footer a:last").click();
-			}
-		});
 
 		// Click events on "insert link" and "insert image" dialog buttons
 		$(".action-insert-link").click(function(e) {
+			console.log('link clicked');
 			var value = $("#input-insert-link").val();
 			if(value !== undefined) {
 				core.insertLinkCallback(value);
@@ -919,39 +929,65 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 				core.insertLinkCallback = undefined;
 			}
 		});
-
-		// Hide events on "insert link" and "insert image" dialogs
-		$(".modal-insert-link, .modal-insert-image").on('hidden.bs.modal', function() {
-			if(core.insertLinkCallback !== undefined) {
-				core.insertLinkCallback(null);
-				core.insertLinkCallback = undefined;
-			}
-		});
 	};
 
 
 // main.js
 
 	this.html(
-		'<div class="wmd-buttons"><ul class="btn-group btn-group6"></ul><ul class="btn-group btn-group1"></ul><ul class="btn-group btn-group2"></ul><ul class="btn-group btn-group3"></ul><ul class="btn-group btn-group4"></ul></div><div id="wmd-button-bar" class="hide"></div>'+
-		'<pre id="wmd-input"><div class="editor-content" contenteditable=true></div></pre>'
+		'<div id="wmd-button-bar" class="hide"></div>'+
+		'<div class="ui top attached segment wmd-buttons"><ul class="btn-group btn-group6"></ul><ul class="btn-group btn-group1"></ul><ul class="btn-group btn-group2"></ul><ul class="btn-group btn-group3"></ul><ul class="btn-group btn-group4"></ul></div>'+
+		'<pre class="ui bottom attached segment" id="wmd-input"><div class="editor-content" contenteditable=true></div></pre>'
 	);
 	$(document.body).append(
-		'<div class="modal fade modal-insert-link"><div class="modal-dialog"><div class="modal-content">'+
-		'<div class="modal-body"><p>آدرس پیوند را اینجا بنویسید:</p><div class="input-group"><span class="input-group-addon"><span class="glyphicon glyphicon-globe"></span></span><input id="input-insert-link" type="text" class="col-sm-5 form-control" placeholder="http://example.com/" /></div></div>'+
-		'<div class="modal-footer"><a href="#" class="btn btn-default" data-dismiss="modal">لغو</a> <a href="#" class="btn btn-primary action-insert-link"data-dismiss="modal">تایید</a></div>'+
-		'</div></div></div>'
+		'<div class="ui small modal transition modal-insert-link">\
+    <i class="close icon"></i>\
+\
+    <div class="header">\
+        درج پیوند\
+    </div>\
+    <div class="content">\
+        <p>آدرس پیوند را اینجا بنویسید:</p>\
+        <div class="ui input"><input id="input-insert-link" type="text"\
+               placeholder="http://example.com/"/></div>\
+    </div>\
+    <div class="actions">\
+        <div class="ui black deny button">\
+            لغو\
+        </div>\
+        <div class="ui positive right labeled icon button action-insert-link">\
+            تأیید\
+            <i class="checkmark icon"></i>\
+        </div>\
+    </div>\
+</div>'
 	);
 	$(document.body).append(
-		'<div class="modal fade modal-insert-image"><div class="modal-dialog"><div class="modal-content">'+
-		'<div class="modal-body"><p>تصویر را در سایت دیگری آپلود کنید و آدرس آن را بنویسید:</p><div class="input-group"><span class="input-group-addon"><i class="glyphicon glyphicon-picture"></i></span><input id="input-insert-image" type="text" class="col-sm-5 form-control" placeholder="http://example.com/image.jpg" /></div></div>'+
-		'<div class="modal-footer"><a href="http://dropbox.com" target="_blank" class="btn btn-link pull-left">سایتی برای آپلود تصویر</a><a href="#" class="btn btn-default" data-dismiss="modal">لغو</a> <a href="#" class="btn btn-primary action-insert-image" data-dismiss="modal">تایید</a></div>'+
-		'</div></div></div>'
+		'<div class="ui small modal transition modal-insert-image">\
+    <i class="close icon"></i>\
+\
+    <div class="header">\
+        درج تصویر\
+    </div>\
+    <div class="content">\
+        <p>تصویر را در سایت دیگری آپلود کنید و آدرس آن را بنویسید:</p>\
+        <div class="ui input"><input id="input-insert-image" type="text" class="ui input" placeholder="http://example.com/image.jpg"/></div>\
+        <p><a href="http://dropbox.com" target="_blank">سایتی برای آپلود تصویر</a></p>\
+    </div>\
+    <div class="actions">\
+        <div class="ui black deny button">\
+            لغو\
+        </div>\
+        <div class="ui positive right labeled icon button action-insert-image">\
+            تأیید\
+            <i class="checkmark icon"></i>\
+        </div>\
+    </div>\
+</div>'
 	);
 
 	editor.init();
 	core.initEditor();
-	$('.wmd-buttons').width($(this).width()).affix({offset: $(this).offset().top});
 
 	return editor;
 };

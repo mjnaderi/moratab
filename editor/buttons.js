@@ -575,45 +575,6 @@ var Markdown = {};
 		this.init();
 	};
 
-	// Creates the background behind the hyperlink text entry box.
-	// And download dialog
-	// Most of this has been moved to CSS but the div creation and
-	// browser-specific hacks remain here.
-	ui.createBackground = function () {
-
-		var background = doc.createElement("div"),
-			style = background.style;
-
-		background.className = "wmd-prompt-background";
-
-		style.position = "absolute";
-		style.top = "0";
-
-		style.zIndex = "1000";
-
-		if (uaSniffed.isIE) {
-			style.filter = "alpha(opacity=50)";
-		}
-		else {
-			style.opacity = "0.5";
-		}
-
-		var pageSize = position.getPageSize();
-		style.height = pageSize[1] + "px";
-
-		if (uaSniffed.isIE) {
-			style.left = doc.documentElement.scrollLeft;
-			style.width = doc.documentElement.clientWidth;
-		}
-		else {
-			style.left = "0";
-			style.width = "100%";
-		}
-
-		doc.body.appendChild(background);
-		return background;
-	};
-
 	// This simulates a modal dialog box and asks for the URL when you
 	// click the hyperlink or image buttons.
 	//
@@ -891,8 +852,8 @@ var Markdown = {};
 				button.className = "wmd-button";
 				var buttonImage = document.createElement("span");
 				button.id = id + postfix;
+				$(button).attr('data-content', title).attr('data-position', 'top center').popup();
 				button.appendChild(buttonImage);
-				button.title = title;
 				if (textOp)
 					button.textOp = textOp;
 				setupButton(button, true);
@@ -1126,7 +1087,6 @@ var Markdown = {};
 		//chunk.findTags(/\s*!?\[/, /\][ ]?(?:\n[ ]*)?(\[.*?\])?/);
 		chunk.findTags(/\s*!?\[/, /\][ ]?(?:\n[ ]*)?(\(.*?\))?/);
 
-		var background;
 
 		if (chunk.endTag.length > 1 && chunk.startTag.length > 0) {
 
@@ -1151,8 +1111,6 @@ var Markdown = {};
 			// The function to be executed when you enter a link and press OK or Cancel.
 			// Marks up the link and adds the ref.
 			var linkEnteredCallback = function (link) {
-
-				background.parentNode.removeChild(background);
 
 				if (link !== null) {
 					// (                          $1
@@ -1195,8 +1153,6 @@ var Markdown = {};
 				}
 				postProcessing();
 			};
-
-			background = ui.createBackground();
 
 			if (isImage) {
 				if (!this.hooks.insertImageDialog(linkEnteredCallback))
