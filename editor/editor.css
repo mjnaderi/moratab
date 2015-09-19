@@ -19,8 +19,8 @@
   overflow: hidden;
   display: inline-block;
   list-style-type: none;
-  padding: 0;
-  margin: 0;
+  padding: 5px;
+  margin: 0 0 -5px;
 }
 #wmd-button-bar ul {
   list-style-type: none;

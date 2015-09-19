@@ -936,7 +936,7 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 
 	this.html(
 		'<div id="wmd-button-bar" class="hide"></div>'+
-		'<div class="ui top attached segment wmd-buttons"><ul class="btn-group btn-group6"></ul><ul class="btn-group btn-group1"></ul><ul class="btn-group btn-group2"></ul><ul class="btn-group btn-group3"></ul><ul class="btn-group btn-group4"></ul></div>'+
+		'<div class="ui top attached wmd-buttons"><ul class="btn-group btn-group6"></ul><ul class="btn-group btn-group1"></ul><ul class="btn-group btn-group2"></ul><ul class="btn-group btn-group3"></ul><ul class="btn-group btn-group4"></ul></div>'+
 		'<pre class="ui bottom attached segment" id="wmd-input"><div class="editor-content" contenteditable=true></div></pre>'
 	);
 	$(document.body).append(
