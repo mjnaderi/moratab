@@ -1,0 +1,19 @@
+{
+  "name": "moratab-semantic",
+  "version": "0.0.1",
+  "homepage": "https://github.com/mjnaderi/moratab",
+  "authors": [
+    "Mohammad Javad Naderi <mjnaderi@gmail.com>",
+    "Alireza Nourian <az.nourian@gmail.com>"
+  ],
+  "keywords": [
+    "markdown"
+  ],
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
