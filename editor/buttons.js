@@ -91,12 +91,16 @@ var Markdown = {};
 		pdf: 'نسخه قابل چاپ',
 		help: 'راهنمای مرتب‌نویسی',
 
-		revert: 'بازیابی آخرین نوشته'
+		revert: 'بازیابی آخرین نوشته',
+
+		skyroom: 'اسکای‌روم',
 	};
 
 	// The default text that appears in the dialog input box when entering links.
 	var imageDefaultText = 'http://';
 	var linkDefaultText = 'http://';
+	var skyroomPrefix = 'https://www.skyroom.online/ch/';
+	var skyroomDefaultText = `${skyroomPrefix}quera_meeting`;
 
 	// The constructed editor object has the methods:
 	// - run() actually starts the editor; should be called after all necessary plugins are registered. Calling this more than once is a no-op.
@@ -115,6 +119,7 @@ var Markdown = {};
 												  * image url (or null if the user cancelled). If this hook returns false, the default dialog will be used.
 												  */
 		hooks.addFalse("insertLinkDialog");
+		hooks.addFalse("insertSkyroomLinkDialog");
 
 		var that = this,
 			panels;
@@ -895,6 +900,11 @@ var Markdown = {};
 					$(buttons.revert).hide();
 				}
 			}));
+
+			buttons.skyroom = makeButton("wmd-skyroom-button", getString("skyroom"), bindCommand(function (chunk, postProcessing) {
+				return this.doSkyroom(chunk, postProcessing);
+			}));
+
 			if (getString('pdf'))
 				buttons.pdf = makeButton("wmd-pdf-button", getString("pdf"), bindCommand(function () {
 					$('<form>', {
@@ -1165,6 +1175,30 @@ var Markdown = {};
 			}
 			return true;
 		}
+	};
+
+	
+	commandProto.doSkyroom = function (chunk, postProcessing) {		
+		var skyroomLinkEnteredCallback = function (link) {
+			let skyroomRegExp = new RegExp(`^${skyroomPrefix}(.*)$`, "gi");
+			skyroomRegExp.lastIndex = 0;
+			if (link !== null && skyroomRegExp.test(link)) {
+				skyroomRegExp.lastIndex = 0;
+				var skyroomRoomId = skyroomRegExp.exec(link)[1]
+				skyroomRegExp.lastIndex = 0;
+				if (skyroomRoomId && !chunk.selection) {
+					chunk.startTag = "%skyroom.meet_";
+					chunk.endTag = "%";
+					chunk.selection = skyroomRoomId;
+				}
+			}
+			postProcessing();
+		};
+		
+		if (!this.hooks.insertSkyroomLinkDialog(skyroomLinkEnteredCallback))
+			ui.prompt(this.getString("skyroom"), skyroomDefaultText, skyroomLinkEnteredCallback);
+
+		return true;
 	};
 
 	// When making a list, hitting shift-enter will put your cursor on the next line
