@@ -936,7 +936,6 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 
 		// Click events on "insert link" and "insert image" dialog buttons
 		$(".action-insert-link").click(function(e) {
-			console.log('link clicked');
 			var value = $("#input-insert-link").val();
 			if(value !== undefined) {
 				core.insertLinkCallback(value);
