@@ -875,6 +875,25 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 			}).modal('show');
 			return true;
 		});
+		// Custom insert image dialog
+		pagedownEditor.hooks.set("insertSkyroomLinkDialog", function(callback) {
+			core.skyroomLinkEnteredCallback = callback;
+			$(".modal-insert-skyroom input[type=text]").val("");
+			$(".modal-insert-skyroom").modal({
+				onShow: function() {
+					isModalShown = true;
+				},
+				onHidden: function() {
+					isModalShown = false;
+					// Hide events on "insert link" and "insert image" dialogs
+					if(core.skyroomLinkEnteredCallback !== undefined) {
+						core.skyroomLinkEnteredCallback(null);
+						core.skyroomLinkEnteredCallback = undefined;
+					}
+				}
+			}).modal('show');
+			return true;
+		});
 
 
 		pagedownEditor.run();
@@ -889,26 +908,28 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 		$(".wmd-button-row li").addClass("btn");
 
 		// Add customized buttons
-		$("#wmd-bold-button").append($('<i class="bold icon">')).appendTo($('.wmd-buttons .btn-group1'));
-		$("#wmd-italic-button").append($('<i class="italic icon">')).appendTo($('.wmd-buttons .btn-group1'));
+		$("#wmd-bold-button").append($('<i class="bold icon"></i>')).appendTo($('.wmd-buttons .btn-group1'));
+		$("#wmd-italic-button").append($('<i class="italic icon"></i>')).appendTo($('.wmd-buttons .btn-group1'));
 
-		$("#wmd-heading-button").append($('<i class="header icon">')).appendTo($('.wmd-buttons .btn-group2'));
-		$("#wmd-quote-button").append($('<i class="quote right icon">')).appendTo($('.wmd-buttons .btn-group2'));
-		$("#wmd-code-button").append($('<i class="code icon">')).appendTo($('.wmd-buttons .btn-group2'));
+		$("#wmd-heading-button").append($('<i class="header icon"></i>')).appendTo($('.wmd-buttons .btn-group2'));
+		$("#wmd-quote-button").append($('<i class="quote right icon"></i>')).appendTo($('.wmd-buttons .btn-group2'));
+		$("#wmd-code-button").append($('<i class="code icon"></i>')).appendTo($('.wmd-buttons .btn-group2'));
 
-		$("#wmd-ulist-button").append($('<i class="unordered list icon">')).appendTo($('.wmd-buttons .btn-group3'));
-		$("#wmd-olist-button").append($('<i class="ordered list icon">')).appendTo($('.wmd-buttons .btn-group3'));
+		$("#wmd-ulist-button").append($('<i class="unordered list icon"></i>')).appendTo($('.wmd-buttons .btn-group3'));
+		$("#wmd-olist-button").append($('<i class="ordered list icon"></i>')).appendTo($('.wmd-buttons .btn-group3'));
 
-		$("#wmd-link-button").append($('<i class="linkify icon">')).appendTo($('.wmd-buttons .btn-group4'));
-		$("#wmd-image-button").append($('<i class="file image outline icon">')).appendTo($('.wmd-buttons .btn-group4'));
-		$("#wmd-hr-button").append($('<i class="minus icon">')).appendTo($('.wmd-buttons .btn-group4'));
-		$("#wmd-help-button").append($('<i class="help circle icon">')).appendTo($('.wmd-buttons .btn-group4'));
+		$("#wmd-link-button").append($('<i class="linkify icon"></i>')).appendTo($('.wmd-buttons .btn-group4'));
+		$("#wmd-image-button").append($('<i class="file image outline icon"></i>')).appendTo($('.wmd-buttons .btn-group4'));
+		$("#wmd-hr-button").append($('<i class="minus icon"></i>')).appendTo($('.wmd-buttons .btn-group4'));
+		$("#wmd-help-button").append($('<i class="help circle icon"></i>')).appendTo($('.wmd-buttons .btn-group4'));
 		//$("#wmd-pdf-button").append($('<i class="file pdf outline icon">')).appendTo($('.wmd-buttons .btn-group4'));
 
 		// $("#wmd-undo-button").append($('<span class="glyphicon glyphicon-arrow-right">')).appendTo($('.wmd-buttons .btn-group5'));
 		// $("#wmd-redo-button").append($('<span class="glyphicon glyphicon-arrow-left">')).appendTo($('.wmd-buttons .btn-group5'));
 
-		$("#wmd-revert-button").append($('<i class="download icon">')).appendTo($('.wmd-buttons .btn-group6'));
+		$("#wmd-revert-button").append($('<i class="download icon"></i>')).appendTo($('.wmd-buttons .btn-group6'));
+
+		$("#wmd-skyroom-button").append($('<i class="phone volume icon"></i>')).appendTo($('.wmd-buttons .btn-group7'));
 
 
 		if(!localStorage.moratab) $("#wmd-revert-button").hide();
@@ -929,62 +950,121 @@ $.fn.moratab = function (defaultContent, editorOptions) {
 				core.insertLinkCallback = undefined;
 			}
 		});
+		$(".action-insert-skyroom").click(function(e) {
+			var value = $("#input-insert-skyroom").val();
+			if(value !== undefined) {
+				core.skyroomLinkEnteredCallback(value);
+				core.skyroomLinkEnteredCallback = undefined;
+			}
+		});
 	};
 
 
 // main.js
 
-	this.html(
-		'<div id="wmd-button-bar" class="hide"></div>'+
-		'<div class="ui top attached wmd-buttons"><ul class="btn-group btn-group6"></ul><ul class="btn-group btn-group1"></ul><ul class="btn-group btn-group2"></ul><ul class="btn-group btn-group3"></ul><ul class="btn-group btn-group4"></ul></div>'+
-		'<pre class="ui bottom attached segment" id="wmd-input"><div class="editor-content" contenteditable=true></div></pre>'
-	);
-	$(document.body).append(
-		'<div class="ui small modal transition modal-insert-link">\
-    <i class="close icon"></i>\
-\
-    <div class="header">\
-        درج پیوند\
-    </div>\
-    <div class="content">\
-        <p>آدرس پیوند را اینجا بنویسید:</p>\
-        <div class="ui input"><input id="input-insert-link" type="text"\
-               placeholder="http://example.com/"/></div>\
-    </div>\
-    <div class="actions">\
-        <div class="ui black deny button">\
-            لغو\
-        </div>\
-        <div class="ui positive right labeled icon button action-insert-link">\
-            تأیید\
-            <i class="checkmark icon"></i>\
-        </div>\
-    </div>\
-</div>'
-	);
-	$(document.body).append(
-		'<div class="ui small modal transition modal-insert-image">\
-    <i class="close icon"></i>\
-\
-    <div class="header">\
-        درج تصویر\
-    </div>\
-    <div class="content">\
-        <p>تصویر را در سایت دیگری آپلود کنید و آدرس آن را بنویسید:</p>\
-        <div class="ui input"><input id="input-insert-image" type="text" class="ui input" placeholder="http://example.com/image.jpg"/></div>\
-        <p><a href="http://dropbox.com" target="_blank">سایتی برای آپلود تصویر</a></p>\
-    </div>\
-    <div class="actions">\
-        <div class="ui black deny button">\
-            لغو\
-        </div>\
-        <div class="ui positive right labeled icon button action-insert-image">\
-            تأیید\
-            <i class="checkmark icon"></i>\
-        </div>\
-    </div>\
-</div>'
-	);
+	this.html(`
+		<div id="wmd-button-bar" class="hide"></div>
+		<div class="ui top attached wmd-buttons">
+			<ul class="btn-group btn-group6"></ul>
+			<ul class="btn-group btn-group1"></ul>
+			<ul class="btn-group btn-group2"></ul>
+			<ul class="btn-group btn-group3"></ul>
+			<ul class="btn-group btn-group4"></ul>
+			<ul class="btn-group btn-group7"></ul>
+		</div>
+		<pre class="ui bottom attached segment" id="wmd-input">
+			<div class="editor-content" contenteditable=true></div>
+		</pre>
+	`);
+	$(document.body).append(`
+		<div class="ui small modal transition modal-insert-link">
+			<i class="close icon"></i>
+		
+			<div class="header">
+				درج پیوند
+			</div>
+			<div class="content">
+				<p>آدرس پیوند را اینجا بنویسید:</p>
+				<div class="ui input" style="width: 100%;">
+					<input 
+						id="input-insert-link" 
+						type="text"
+						placeholder="http://example.com/"
+						style="text-align: left; direction: ltr;"
+					/>
+				</div>
+			</div>
+			<div class="actions">
+				<div class="ui black deny button">
+					لغو
+				</div>
+				<div class="ui positive right labeled icon button action-insert-link">
+					تأیید
+					<i class="checkmark icon"></i>
+				</div>
+			</div>
+		</div>
+	`);
+	$(document.body).append(`
+		<div class="ui small modal transition modal-insert-skyroom">
+			<i class="close icon"></i>
+
+			<div class="header">
+				درج صفحه‌ی اسکای‌روم
+			</div>
+			<div class="content">
+				<p>آدرس صفحه‌ی اسکای‌روم را اینجا بنویسید:</p>
+				<div class="ui input" style="width: 100%;">
+					<input 
+						id="input-insert-skyroom" 
+						type="text" 
+						placeholder="https://www.skyroom.online/ch/quera"
+						style="text-align: left; direction: ltr;"
+					/>
+				</div>
+			</div>
+			<div class="actions">
+				<div class="ui black deny button">
+					لغو
+				</div>
+				<div class="ui positive right labeled icon button action-insert-skyroom">
+					تأیید
+					<i class="checkmark icon"></i>
+				</div>
+			</div>
+		</div>
+	`);
+	$(document.body).append(`
+		<div class="ui small modal transition modal-insert-image">
+			<i class="close icon"></i>
+
+			<div class="header">
+				درج تصویر
+			</div>
+			<div class="content">
+				<p>تصویر را در سایت دیگری آپلود کنید و آدرس آن را بنویسید:</p>
+				<div class="ui input" style="width: 100%;">
+					<input 
+						id="input-insert-image" 
+						type="text" 
+						class="ui input" 
+						placeholder="http://example.com/image.jpg"
+						style="text-align: left; direction: ltr;"
+					/>
+				</div>
+				<p><a href="http://dropbox.com" target="_blank">سایتی برای آپلود تصویر</a></p>
+			</div>
+			<div class="actions">
+				<div class="ui black deny button">
+					لغو
+				</div>
+				<div class="ui positive right labeled icon button action-insert-image">
+					تأیید
+					<i class="checkmark icon"></i>
+				</div>
+			</div>
+		</div>
+	`);
 
 	editor.init();
 	core.initEditor();
