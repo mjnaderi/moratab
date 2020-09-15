@@ -1178,9 +1178,7 @@ var Markdown = {};
 	};
 
 	
-	commandProto.doSkyroom = function (chunk, postProcessing) {
-		var that = this;
-		
+	commandProto.doSkyroom = function (chunk, postProcessing) {		
 		var skyroomLinkEnteredCallback = function (link) {
 			let skyroomRegExp = new RegExp(`^${skyroomPrefix}(.*)$`, "gi");
 			skyroomRegExp.lastIndex = 0;
