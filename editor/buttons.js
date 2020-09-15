@@ -1182,13 +1182,16 @@ var Markdown = {};
 		var that = this;
 		
 		var skyroomLinkEnteredCallback = function (link) {
-			if (link !== null) {
-				var skyroomRegExp = new RegExp(`${skyroomPrefix}(.*)`, "g");
-				chunk.startTag = "%skyroom.meet_";
-				chunk.endTag = "%";
-
-				if (!chunk.selection) {
-					chunk.selection = skyroomRegExp.exec(link)[1];
+			let skyroomRegExp = new RegExp(`^${skyroomPrefix}(.*)$`, "gi");
+			skyroomRegExp.lastIndex = 0;
+			if (link !== null && skyroomRegExp.test(link)) {
+				skyroomRegExp.lastIndex = 0;
+				var skyroomRoomId = skyroomRegExp.exec(link)[1]
+				skyroomRegExp.lastIndex = 0;
+				if (skyroomRoomId && !chunk.selection) {
+					chunk.startTag = "%skyroom.meet_";
+					chunk.endTag = "%";
+					chunk.selection = skyroomRoomId;
 				}
 			}
 			postProcessing();
